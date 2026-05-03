@@ -9,6 +9,14 @@ import {
   Asset
 } from "@stellar/stellar-sdk";
 
+import NotificationCenter from "./components/NotificationCenter";
+import ReputationPanel from "./components/ReputationPanel";
+import AchievementsGrid from "./components/AchievementsGrid";
+import DAOSection from "./components/DAOSection";
+import Leaderboard from "./components/Leaderboard";
+import { useNotifications } from "./hooks/useNotifications";
+import { checkAndMintAchievements } from "./hooks/useAchievements";
+
 // Initialize Stellar Testnet Server
 const server = new Horizon.Server("https://horizon-testnet.stellar.org");
 
@@ -123,6 +131,19 @@ export default function App() {
   // Filters & UI States
   const [filter, setFilter] = useState<"All" | TaskStatus>("All");
   const [successModal, setSuccessModal] = useState<{show: boolean, hash: string} | null>(null);
+  
+  const [earnedAchievements, setEarnedAchievements] = useState<string[]>(() => {
+    const saved = localStorage.getItem("campusAchievements");
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [confirmRewardModal, setConfirmRewardModal] = useState<CampusTask | null>(null);
+
+  const { notifications, unreadCount, markAllRead, addNotification } = useNotifications(wallet);
+
+  useEffect(() => {
+    localStorage.setItem("campusAchievements", JSON.stringify(earnedAchievements));
+  }, [earnedAchievements]);
 
   // Sync to localStorage
   useEffect(() => {
@@ -142,6 +163,37 @@ export default function App() {
   const pendingTasks = tasks.filter(t => t.status === "Pending").length;
   const approvedTasks = tasks.filter(t => t.status === "Approved").length;
   const fundedTasks = tasks.filter(t => t.status === "Funded").length;
+
+  const studentStats = {
+    totalTasks: fundedTasks + approvedTasks,
+    tasksThisWeek: fundedTasks + approvedTasks,
+    blockchainTasks: tasks.filter(t => t.taskType === "Workshop" && (t.status === "Approved" || t.status === "Funded")).length,
+    volunteerTasks: tasks.filter(t => t.taskType === "Volunteering" && (t.status === "Approved" || t.status === "Funded")).length,
+    projects: tasks.filter(t => t.taskType === "Course Completion" && (t.status === "Approved" || t.status === "Funded")).length,
+    leaderboardRank: 1,
+    level: 1
+  };
+
+  useEffect(() => {
+    if (!wallet) return;
+    const mintNew = async () => {
+      // Mock minting function
+      const mintNFT = async () => new Promise(res => setTimeout(res, 500));
+      const newlyEarned = await checkAndMintAchievements(studentStats, earnedAchievements, mintNFT);
+      if (newlyEarned.length > 0) {
+        setEarnedAchievements(prev => [...prev, ...newlyEarned]);
+        newlyEarned.forEach(id => {
+          addNotification({
+            type: 'nft',
+            icon: '🎖️',
+            title: 'Achievement Unlocked!',
+            message: `You earned a new Proof-of-Contribution certificate.`
+          });
+        });
+      }
+    };
+    mintNew();
+  }, [studentStats.totalTasks, studentStats.level, wallet]);
 
   const connectWallet = async () => {
     try {
@@ -217,14 +269,21 @@ export default function App() {
     setTaskType("Workshop");
     setDescription("");
     setAmount("");
+    addNotification({ type: 'submit', icon: '📝', title: 'Task Submitted', message: `Your task "${description.substring(0, 20)}..." is pending review.` });
     alert("✅ Task submitted successfully!");
   };
 
   const updateTaskStatus = (id: number, status: TaskStatus) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+    if (status === "Approved") {
+      addNotification({ type: 'approve', icon: '✅', title: 'Task Approved!', message: `A teacher approved your task. Awaiting funding.` });
+    } else if (status === "Rejected") {
+      addNotification({ type: 'reject', icon: '❌', title: 'Task Rejected', message: `Your task was rejected.` });
+    }
   };
 
-  const handleSendReward = async (task: CampusTask) => {
+  const confirmAndSendReward = async (task: CampusTask) => {
+    setConfirmRewardModal(null);
     try {
       const result = await sendReward(task.wallet, task.amount);
       if (result && result.hash) {
@@ -239,6 +298,7 @@ export default function App() {
         };
         setTransactions(prev => [newTx, ...prev]);
         setSuccessModal({ show: true, hash: result.hash });
+        addNotification({ type: 'reward', icon: '💰', title: 'Reward Funded!', message: `${task.amount} XLM has been sent to ${task.studentName}.` });
 
         // Refresh balance
         if (wallet) {
@@ -278,6 +338,8 @@ export default function App() {
               👩‍🏫 Teacher
             </button>
           </div>
+
+          <NotificationCenter notifications={notifications} unreadCount={unreadCount} markAllRead={markAllRead} />
 
           {!wallet ? (
             <button style={styles.connectButton} className="btn-glow" onClick={connectWallet}>
@@ -331,9 +393,22 @@ export default function App() {
 
         {/* --- STUDENT VIEW --- */}
         {role === "student" && !showLogin && (
-          <div style={styles.contentGrid}>
-            {/* Submission Form */}
-            <section style={styles.card} className="glass-panel">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{...styles.card, padding: '20px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '20px', border: '1px solid var(--accent-purple)'}} className="glass-panel">
+              <div style={{textAlign: 'center'}}><div style={{fontSize: '24px', fontWeight: 'bold'}}>{studentStats.totalTasks}</div><div style={{fontSize: '12px', color: 'var(--text-secondary)'}}>Total Tasks</div></div>
+              <div style={{textAlign: 'center'}}><div style={{fontSize: '24px', fontWeight: 'bold', color: 'var(--accent-blue)'}}>{studentStats.level}</div><div style={{fontSize: '12px', color: 'var(--text-secondary)'}}>Level</div></div>
+              <div style={{textAlign: 'center'}}><div style={{fontSize: '24px', fontWeight: 'bold', color: 'var(--success)'}}>{fundedTasks}</div><div style={{fontSize: '12px', color: 'var(--text-secondary)'}}>Funded Tasks</div></div>
+              <div style={{textAlign: 'center'}}><div style={{fontSize: '24px', fontWeight: 'bold', color: 'var(--warning)'}}>{totalRewardsSent} XLM</div><div style={{fontSize: '12px', color: 'var(--text-secondary)'}}>Total Earned</div></div>
+            </div>
+
+            <div style={styles.contentGrid}>
+              <ReputationPanel walletAddress={wallet} approvedTasks={tasks.filter(t => t.status === "Approved" || t.status === "Funded")} />
+              <AchievementsGrid earnedIds={earnedAchievements} />
+            </div>
+
+            <div style={styles.contentGrid}>
+              {/* Submission Form */}
+              <section style={styles.card} className="glass-panel">
               <div style={styles.cardHeader}>
                 <h2 style={styles.cardTitle}>📝 Submit a Task</h2>
                 <p style={styles.cardSubtitle}>Fill out your details to claim your reward</p>
@@ -422,6 +497,10 @@ export default function App() {
                 )}
               </div>
             </section>
+            </div>
+
+            <DAOSection walletAddress={wallet} approvedTasks={tasks.filter(t => t.status === "Approved" || t.status === "Funded")} addNotification={addNotification} />
+            <Leaderboard tasks={tasks} currentWallet={wallet} />
           </div>
         )}
 
@@ -558,14 +637,21 @@ export default function App() {
                             </button>
                           </>
                         )}
-                        
                         {task.status === "Approved" && (
                           <button 
                             className="btn-glow"
                             style={{...styles.actionBtn, background: "linear-gradient(to right, var(--accent-purple), var(--accent-blue))", color: "white", width: "100%", border: "none"}} 
-                            onClick={() => handleSendReward(task)}
+                            onClick={() => setConfirmRewardModal(task)}
                           >
                             💸 Send Reward ({task.amount} XLM)
+                          </button>
+                        )}
+                        {task.status === "Funded" && (
+                          <button 
+                            disabled
+                            style={{...styles.actionBtn, background: "rgba(255,255,255,0.05)", color: "var(--success)", width: "100%", border: "1px solid var(--success)", opacity: 0.7, cursor: "not-allowed"}} 
+                          >
+                            🚀 Already Funded
                           </button>
                         )}
                       </div>
@@ -616,6 +702,41 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* Confirm Reward Modal */}
+      {confirmRewardModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%", 
+          background: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", 
+          alignItems: "center", zIndex: 1000, backdropFilter: "blur(5px)"
+        }}>
+          <div style={{...styles.card, background: "rgba(15, 23, 42, 0.95)", border: "1px solid var(--warning)", textAlign: "center", maxWidth: "400px"}}>
+            <div style={{fontSize: "4rem", marginBottom: "10px"}}>⚠️</div>
+            <h2 style={{margin: "0 0 10px 0", color: "white"}}>Confirm Reward</h2>
+            <p style={{color: "var(--text-secondary)", marginBottom: "20px", fontSize: "14px"}}>
+              You are about to send <strong>{confirmRewardModal.amount} XLM</strong> to <strong>{confirmRewardModal.studentName}</strong>.
+            </p>
+            <p style={{color: "var(--text-secondary)", marginBottom: "20px", fontSize: "12px", wordBreak: "break-all"}}>
+              Wallet: {confirmRewardModal.wallet}
+            </p>
+            <div style={{display: 'flex', gap: '10px'}}>
+              <button 
+                style={{...styles.submitButton, background: "rgba(255,255,255,0.1)", color: "white"}}
+                onClick={() => setConfirmRewardModal(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-glow"
+                style={{...styles.submitButton}}
+                onClick={() => confirmAndSendReward(confirmRewardModal)}
+              >
+                Confirm & Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Modal */}
       {successModal && successModal.show && (
