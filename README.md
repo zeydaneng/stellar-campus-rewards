@@ -83,9 +83,7 @@ http://localhost:3000
 
 ## 🔗 Transaction Proof
 
-Example:
-
-https://stellar.expert/explorer/testnet/tx/YOUR_TRANSACTION_HASH
+https://stellar.expert/explorer/testnet/tx/fb5671a89769b552926525622dffed7b90eb3d0698296abd9769946f04b54191
 
 ---
 
