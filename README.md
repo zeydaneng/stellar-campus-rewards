@@ -1,5 +1,6 @@
 # 🚀 Stellar Campus Rewards
 
+🔗 Live Project: https://github.com/zeydaneng/stellar-campus-rewards
 Empowering students with blockchain-based rewards on the Stellar network.
 
 ---
@@ -18,41 +19,41 @@ This ensures transparency, fairness, and trust in the reward distribution proces
 
 Our vision is to create a global, transparent, and decentralized student reward ecosystem powered by blockchain technology.
 
-By leveraging Stellar, we aim to eliminate bias, delays, and inefficiencies in traditional reward systems. This platform can scale to universities worldwide, enabling instant, secure, and trackable financial incentives for students.
+By leveraging Stellar, we aim to eliminate bias, delays, and inefficiencies in traditional reward systems.
 
 ---
 
 ## ⚙️ Features
 
-* 🔗 Connect Freighter Wallet
-* 🧑🎓 Submit student tasks
-* ✅ Admin approval system
-* 💰 Send XLM rewards
-* 📊 Track funded tasks
-* 🌐 Transparent blockchain transactions
+- 🔗 Connect Freighter Wallet
+- 🧑‍🎓 Submit student tasks
+- ✅ Admin approval system
+- 💰 Send XLM rewards
+- 📊 Track funded tasks
+- 🌐 Transparent blockchain transactions
 
 ---
 
 ## 🛠 Tech Stack
 
-* Frontend: React + Vite
-* Blockchain: Stellar (Soroban Testnet)
-* Wallet: Freighter
-* Smart Contracts: Rust (Soroban)
+- Frontend: React + Vite
+- Blockchain: Stellar (Soroban Testnet)
+- Wallet: Freighter
+- Smart Contracts: Rust (Soroban)
 
 ---
 
 ## 🚀 How to Run the Project
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_PROJECT.git
-cd YOUR_PROJECT
+git clone https://github.com/zeydaneng/stellar-campus-rewards.git
+cd stellar-campus-rewards
 cd frontend
 npm install
 npm run dev
 ```
 
-Open:
+Open in browser:
 
 ```
 http://localhost:3000
@@ -71,16 +72,18 @@ http://localhost:3000
 
 ## 💸 Demo Flow
 
-1. Connect wallet ✅
-2. Submit a task ✅
-3. Approve task ✅
-4. Send reward (XLM) ✅
+1. Connect wallet
+2. Submit a task
+3. Teacher reviews the task
+4. Approve task
+5. Send XLM reward
+6. Track transaction history
 
 ---
 
 ## 🔗 Transaction Proof
 
-Example transaction:
+Example:
 
 https://stellar.expert/explorer/testnet/tx/YOUR_TRANSACTION_HASH
 
@@ -88,21 +91,46 @@ https://stellar.expert/explorer/testnet/tx/YOUR_TRANSACTION_HASH
 
 ## 📸 Screenshots
 
-Add your screenshots here:
+### 🏠 Home Page
 
-* Homepage
-* Task submission
-* Wallet connection
-* Funded task
+<img src="screenshots/home.jpeg" width="800"/>
+
+### 📝 Task Submission
+
+<img src="screenshots/submit.jpeg" width="800"/>
+
+### ✅ Submission Success
+
+<img src="screenshots/success.jpeg" width="800"/>
+
+### 👨‍🎓 Student View
+
+<img src="screenshots/student-view.jpeg" width="800"/>
+
+### 👨‍🏫 Teacher Dashboard
+
+<img src="screenshots/teacher-dashboard.jpeg" width="800"/>
+
+### 💸 Reward Sent
+
+<img src="screenshots/reward-sent.jpeg" width="800"/>
+
+### ✅ Reward Sent Successfully
+
+<img src="screenshots/reward-sent-success.jpeg" width="800"/>
+
+### 📜 Dashboard & Transaction History
+
+<img src="screenshots/teacher-dashboard-history.jpeg" width="800"/>
 
 ---
 
 ## 👤 About Me
 
-* Name: Cuma Alzedan
-* Student at: Bozok University
-* Passion: Blockchain Development 🚀
-* Focus: Building real-world decentralized applications
+- Name: Cuma Alzedan
+- Student at: Bozok University
+- Passion: Blockchain Development 🚀
+- Focus: Building real-world decentralized applications
 
 ---
 
